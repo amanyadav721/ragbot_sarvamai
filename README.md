@@ -1,4 +1,4 @@
-# PDF Chat with Multilingual Support with SarvamAPi
+# PDF Chat with Multilingual Support with SarvamAPi and Test your Knowledge with Customized Tests
 
 This project is an interactive chat application that allows users to ask questions about the content of a PDF document. It features a user-friendly web interface, supports multiple languages, and utilizes advanced AI technologies for natural language processing and generation.
 ![ai1](https://github.com/user-attachments/assets/79cb7932-e532-47b3-9bce-e3499c94d416)
