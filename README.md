@@ -1,6 +1,7 @@
-# PDF Chat with Multilingual Support
+# PDF Chat with Multilingual Support with SarvamAPi
 
 This project is an interactive chat application that allows users to ask questions about the content of a PDF document. It features a user-friendly web interface, supports multiple languages, and utilizes advanced AI technologies for natural language processing and generation.
+![ai1](https://github.com/user-attachments/assets/79cb7932-e532-47b3-9bce-e3499c94d416)
 
 
 
@@ -32,7 +33,7 @@ This project is an interactive chat application that allows users to ask questio
 1. Clone the repository:
    ```
    git clone https://github.com/yourusername/pdf-chat-multilingual.git
-   cd pdf-chat-multilingual
+   cd ragbot_sarvamai/ragchatbot
    ```
 
 2. Create a virtual environment and activate it:
