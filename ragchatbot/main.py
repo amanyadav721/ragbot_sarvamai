@@ -61,25 +61,18 @@ async def ask_question(request: AskQuestionRequest):
     
     try:
         response_ai = conversation.invoke({'question': request.question})
-        
-        # Log response_ai to check its structure
-        logging.info(f"Response AI: {response_ai} (type: {type(response_ai)})")
-        
-        # Check if response_ai is a dictionary
         if isinstance(response_ai, dict):
             ai_message = response_ai.get('answer')
             if ai_message is None:
                 raise ValueError("No AI response found in the response.")
-            
+            print(request.language)
             response = sarvamai_feature(ai_message, request.language)
             chat_history = response_ai.get('chat_history', [])
-            print("iT'S AI")
-            print(ai_message)
-            
             if chat_history and isinstance(chat_history, list):
                 logging.info(f"User asked: {request.question}")
                 logging.info(f"AI responded: {chat_history[-1].content}")
-                
+                if request.language == "en-US":
+                    return JSONResponse(content={"answer": chat_history[-1].content}, status_code=200)
                 return JSONResponse(content={"answer": response}, status_code=200)
             else:
                 raise ValueError("Chat history is not in the expected format.")

@@ -5,29 +5,24 @@ from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain,LLMMathChain
+from langchain.chains import ConversationalRetrievalChain
 from langchain.agents import Tool, AgentExecutor, AgentType
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 
-# Load environment variables
+logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-# Retrieve API keys from environment variables
 groq_api_key = os.getenv("GROQ_API_KEY")
 google_api_token = os.getenv("GEMINI_KEY")
 sarvamai_api_key = os.getenv("SARVAMAI_API_KEY")
 
-# Check if the API keys are set
 if not groq_api_key or not google_api_token and sarvamai_api_key:
     logging.error("GROQ_API_KEY, GEMINI_KEY,sarvamai_api_key must be set in the .env file")
     raise ValueError("GROQ_API_KEY, GEMINI_KEY,must be set in the .env file")
 
-# Set the GROQ_API_KEY environment variable
 os.environ["GROQ_API_KEY"] = groq_api_key
 
 def sarvamai_feature(text, target_language):
@@ -52,7 +47,6 @@ def sarvamai_feature(text, target_language):
     
 
 
-# Initialize the language models
 try:
     model = ChatGroq(temperature=0.6, model_name="llama-3.1-70b-versatile")
     emb = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=google_api_token)
@@ -62,7 +56,7 @@ except Exception as e:
     logging.error(f"Failed to initialize language models: {e}")
     raise e
 
-# Path to the PDF file
+
 pdf_path = os.path.join(os.path.dirname(__file__), 'dataset', 'iesc111.pdf')
 
 def get_pdf_text(pdf_path):
@@ -127,12 +121,11 @@ def get_conversation_chain(vectorstore):
 def rag():
     """Load PDF, process it, and initialize the conversation chain."""
     try:
-        # Load and process the PDF
+
         pdf_text = get_pdf_text(pdf_path)
         text_chunks = get_text_chunks(pdf_text)
         vectorstore = get_vectorstore(text_chunks)
         
-        # Create conversation chain
         conversation_chain = get_conversation_chain(vectorstore)
         logging.info("RAG (Retrieve and Generate) pipeline initialized successfully.")
     except Exception as e:
@@ -144,7 +137,6 @@ def rag():
 def create_agent():
     """Create an Agent with VectorDB and Math Calculation tools."""
     try:
-        # Initialize memory for the Agent
         pdf_text = get_pdf_text(pdf_path)
         text_chunks = get_text_chunks(pdf_text)
         vectorstore = get_vectorstore(text_chunks)
@@ -154,33 +146,45 @@ def create_agent():
             return_messages=True
         )
         
-        # Initialize the retrieval chain
         conversation_chain = ConversationalRetrievalChain.from_llm(
             llm=model,
             retriever=vectorstore.as_retriever(),
             memory=memory
         )
-        
-        # Define the VectorDB Tool with decision logic
         def vector_db_func(q):
-            if any(keyword in q.lower() for keyword in ["pdf", "document", "information"]):
+           
+            db_keywords = ["pdf", "document", "information", "content", "text", "book", "report", "data"]
+            
+            non_db_phrases = ["hello", "hi", "greetings", "how are you", "goodbye", "thank you"]
+            
+            if any(phrase in q.lower() for phrase in non_db_phrases):
+                return "No need to query the VectorDB for this input."
+            
+            if any(keyword in q.lower() for keyword in db_keywords):
+                return conversation_chain({"question": q})["chat_history"][-1].content
+            
+            should_use_db = llm.predict(f"Based on this query, should I use a document database to answer? Query: {q}\nAnswer (Yes/No):")
+            if "yes" in should_use_db.lower():
                 return conversation_chain({"question": q})["chat_history"][-1].content
             else:
-                return "No need to query the VectorDB for this input."
+                return "After consideration, I don't think we need to query the VectorDB for this input."
+        
+        translation_tool = Tool(
+        name="Translator",
+        func=lambda query: sarvamai_feature(query.split('to')[-1].strip(), query.split('to')[0].strip()),
+        description="Useful for translating text. Use format: 'Translate [target language] to [text to translate]'"
+         )
+
+            
         
         vector_db_tool = Tool(
-            name="VectorDB",
-            func=vector_db_func,
-            description="Useful for answering questions based on the content of the provided PDF document."
-        )
+                name="VectorDB",
+                func=vector_db_func,
+                description="Useful for answering questions based on the content of the provided PDF document. Use this when the query is about specific information that might be in the document."
+            )
         
 
-        math_chain = LLMMathChain.from_llm(llm, verbose=False)
-        math_tool = Tool(
-            name="Calculator",
-            func=math_chain.run,
-            description="Useful for performing mathematical calculations."
-        )
+        
         
         greeting_tool = Tool(
             name="Greeting",
@@ -189,7 +193,7 @@ def create_agent():
         )
         
 
-        tools = [vector_db_tool, math_tool, greeting_tool]
+        tools = [vector_db_tool, greeting_tool,translation_tool]
         
 
         agent_executor = AgentExecutor.from_agent_and_tools(

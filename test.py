@@ -5,7 +5,7 @@ url = "https://api.sarvam.ai/translate"
 payload = {
     "input": "Who are you",
     "source_language_code": "en-IN",
-    "target_language_code": "hi-IN",
+    "target_language_code": "en-IN",
     "speaker_gender": "Male",
     "mode": "formal",
     "model": "mayura:v1",
