@@ -32,7 +32,7 @@ This project is an interactive chat application that allows users to ask questio
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/pdf-chat-multilingual.git
+   git clone https://github.com/amanyadav721/ragbot_sarvamai.git
    cd ragbot_sarvamai/ragchatbot
    ```
 
