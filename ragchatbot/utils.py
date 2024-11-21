@@ -57,7 +57,7 @@ except Exception as e:
     raise e
 
 
-pdf_path = os.path.join(os.path.dirname(__file__), 'dataset', 'iesc111.pdf')
+pdf_path = os.path.join(os.path.dirname(__file__), 'dataset', 'data.pdf')
 
 def get_pdf_text(pdf_path):
     """Extract text from a single PDF file."""
